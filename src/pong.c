@@ -19,8 +19,8 @@
 #define LEFT_BORDER 5
 #define RIGHT_BORDER 115
   
-static Window *s_tennis_window;
-static Layer *s_tennis_layer;
+static Window *s_pong_window;
+static Layer *s_pong_layer;
 
 static AppTimer *timer;
 
@@ -39,7 +39,7 @@ static short lose = 0;
 static short person_score = 0;
 static short cpu_score = 0;
 
-static void draw_tennis(Layer *layer, GContext *ctx) {
+static void draw_pong(Layer *layer, GContext *ctx) {
   graphics_context_set_stroke_color(ctx, GColorWhite);
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_context_set_text_color(ctx, GColorWhite);
@@ -146,6 +146,12 @@ static void move() {
       }
     }
   }
+  
+  // Fix ball if in glitchy corner
+  if (ball_y_pos > USER_GOAL-2 && ball_x_pos > RIGHT_BORDER - 2) {
+    ball_x_vel = -ball_x_vel;
+    ball_y_vel = -ball_y_vel;
+  }
 }
 
 static void move_with_timer() {
@@ -159,7 +165,7 @@ static void move_with_timer() {
     lose = 1;
     stop();
   }
-  layer_mark_dirty(s_tennis_layer);
+  layer_mark_dirty(s_pong_layer);
 }
 
 void reset_game() {
@@ -180,21 +186,23 @@ void reset_game() {
   timer = app_timer_register(WAIT, move_with_timer, NULL);
 }
 
-static void begin_up(ClickRecognizerRef recognizer, void *context) {
-  person_vel = -PERSON_VEL;
-}
-
 static void end_move(ClickRecognizerRef recognizer, void *context) {
   person_vel = 0;
 }
 
-static void begin_down(ClickRecognizerRef recognizer, void *context) {
+static void begin_left(ClickRecognizerRef recognizer, void *context) {
+  person_vel = -PERSON_VEL;
+}
+
+static void begin_right(ClickRecognizerRef recognizer, void *context) {
   person_vel = PERSON_VEL;
 }
 
 static void pause(ClickRecognizerRef recognizer, void *context) {
   if (win==0 && lose==0) {
     if (paused==0) {
+      paused = 1;
+      app_timer_cancel(timer);  
     } else {
       paused = 0;
       timer = app_timer_register(WAIT, move_with_timer, NULL);
@@ -210,56 +218,55 @@ static void back(ClickRecognizerRef recognizer, void *context) {
   window_stack_pop(true);
 }
 
-void tennis_config_provider(Window *window) {
+void pong_config_provider(Window *window) {
   // set click listeners
-  window_raw_click_subscribe(BUTTON_ID_UP, begin_up, end_move, NULL);
+  window_raw_click_subscribe(BUTTON_ID_UP, begin_left, end_move, NULL);
   window_single_click_subscribe(BUTTON_ID_SELECT, pause);
   window_single_click_subscribe(BUTTON_ID_BACK, back);
-  window_raw_click_subscribe(BUTTON_ID_DOWN, begin_down, end_move, NULL);
+  window_raw_click_subscribe(BUTTON_ID_DOWN, begin_right, end_move, NULL);
   window_long_click_subscribe(BUTTON_ID_SELECT, 500, reset_game, NULL);
 }
 
-static void tennis_window_load(Window *window) {
-  s_tennis_layer = layer_create(GRect(0, 0, 144, 152));
+static void pong_window_load(Window *window) {
+  s_pong_layer = layer_create(GRect(0, 0, 144, 152));
   
-  layer_set_update_proc(s_tennis_layer, draw_tennis);
-  layer_add_child(window_get_root_layer(s_tennis_window), s_tennis_layer);
+  layer_set_update_proc(s_pong_layer, draw_pong);
+  layer_add_child(window_get_root_layer(s_pong_window), s_pong_layer);
   
-  window_set_click_config_provider(window, (ClickConfigProvider) tennis_config_provider);
+  window_set_click_config_provider(window, (ClickConfigProvider) pong_config_provider);
   
   ball_y_vel = rand() % VERT_VEL;
   timer = app_timer_register(WAIT, move_with_timer, NULL);
 }
 
-static void tennis_window_unload(Window *window) {
-  layer_destroy(s_tennis_layer);
-  window_destroy(s_tennis_window);
+static void pong_window_unload(Window *window) {
+  layer_destroy(s_pong_layer);
 }
 
-void tennis_init() {  
+void pong_init() {  
   // Create main Window element and assign to pointer
-  s_tennis_window = window_create();
+  s_pong_window = window_create();
   
-  window_set_background_color(s_tennis_window, GColorBlack);
+  window_set_background_color(s_pong_window, GColorBlack);
 
   // Set handlers to manage the elements inside the Window
-  window_set_window_handlers(s_tennis_window, (WindowHandlers) {
-    .load = tennis_window_load,
-    .unload = tennis_window_unload
+  window_set_window_handlers(s_pong_window, (WindowHandlers) {
+    .load = pong_window_load,
+    .unload = pong_window_unload
   });
 
   // Show the Window on the watch, with animated=true
-  window_stack_push(s_tennis_window, true);
+  window_stack_push(s_pong_window, true);
 }
 
-static void tennis_deinit() {
+static void pong_deinit() {
   // Destroy window
-  window_destroy(s_tennis_window);
+  window_destroy(s_pong_window);
 }
 
 int main() {
-  tennis_init();
+  pong_init();
   app_event_loop();
-  tennis_deinit();
+  pong_deinit();
 }
 
