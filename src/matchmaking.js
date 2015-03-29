@@ -19,18 +19,6 @@ var xhrRequest = function (url, type, data, callback) {
   xhr.send(JSON.stringify(data));
 };
 
-var xhrRequestAsync = function (url, type, data, callback) {
-  var xhr = new XMLHttpRequest();
-  xhr.onload = function () {
-    callback(this.responseText);
-  };
-  
-  xhr.open(type, url, true);
-  xhr.setRequestHeader('Content-type', 'application/json');
-  xhr.send(JSON.stringify(data));
-};
-
-
 function locationSuccess(pos) {
   // Construct URL
   var url = baseUrl + register;
@@ -60,9 +48,9 @@ function locationSuccess(pos) {
       
     // Assemble dictionary using our keys
     var dictionary = {
+      'KEY_START': start,
       'KEY_PLAYER_NUM': player_num,
-      'KEY_OPPONENT_NUM': opponent_num,
-      'KEY_START': start
+      'KEY_OPPONENT_NUM': opponent_num
     };
 
     // Send to Pebble
@@ -105,7 +93,7 @@ Pebble.addEventListener('appmessage',
     if(e.payload.KEY_PLAY_POS){
       //send position
       url = baseUrl + give_pos;
-      xhrRequestAsync(url, 'POST', { "x_pos" : e.payload.KEYPLAY_POS }, function(responseText){
+      xhrRequest(url, 'POST', { "x_pos" : e.payload.KEYPLAY_POS }, function(responseText){
         console.log("give_pos response text: " + responseText);
         
         url = baseUrl + get_pos;
