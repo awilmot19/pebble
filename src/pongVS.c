@@ -31,9 +31,9 @@ static Window *s_start_window;
 
 //static AppTimer *timer;
 
-static bool opponent = false;
+//static bool opponent = false;
 
-static short inbox_received_callback(DictionaryIterator *iterator, void *context) { 
+static void inbox_received_callback(DictionaryIterator *iterator, void *context) { 
   // Read first item
   Tuple *t = dict_read_first(iterator);
 
@@ -44,18 +44,18 @@ static short inbox_received_callback(DictionaryIterator *iterator, void *context
     case KEY_OPP_POS:
       APP_LOG(APP_LOG_LEVEL_ERROR, "%d", (int)t->value->int32);
       opp_x_pos = (int)t->value->int32;
-      return opp_x_pos;
+      //return opp_x_pos;
       APP_LOG(APP_LOG_LEVEL_ERROR, "KEY OPP POS");
     break;
     default:
     APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key);
     break;
+    }
   }
-
     // Look for next item
     t = dict_read_next(iterator);
-  }
 }
+
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
   APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
@@ -107,14 +107,15 @@ static short win = 0;
 static short lose = 0;
 static bool gameOn = true;
 
-static DictionaryIterator *iter;
-static const short size = dict_calc_buffer_size(1, sizeof(short));
-short buffer[size];
-
 static short person_score = 0;
 static short opp_score = 0;
 
 static void draw_pongVS(Layer *layer, GContext *ctx) {
+
+  static DictionaryIterator *iter;
+  //short size = dict_calc_buffer_size(1, sizeof(short));
+  //uint8_t buffer[size];
+  
   graphics_context_set_stroke_color(ctx, GColorWhite);
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_context_set_text_color(ctx, GColorWhite);
@@ -122,9 +123,11 @@ static void draw_pongVS(Layer *layer, GContext *ctx) {
   // Get opponents current paddle position
   //curr_opp_pos = inbox_received_callback(DictionaryIterator *iterator, void *context);
   // Send players current paddle position
-  dict_write_begin(iter, &buffer, sizeof(buffer));
-  dict_write_data(iter, person_x_pos, *sizeof(short));
-  outbox_sent_callback(&iter, void *context);
+  //dict_write_begin(iter, buffer, sizeof(buffer));
+  app_message_outbox_begin(&iter);
+  dict_write_int(iter, KEY_PLAY_POS, &person_x_pos, sizeof(person_x_pos), true);
+  //outbox_sent_callback(&iter, void *context);
+  app_message_outbox_send();
   
   // scores
   char person_score_char[2] = " ";
@@ -232,7 +235,7 @@ static void move_with_timer() {
   layer_mark_dirty(s_pongVS_layer);
 }
 
-void reset_game() {
+void reset_gameVS() {
   paused = 0;
   app_timer_cancel(timer);
   ball_x_vel = 0;
@@ -264,7 +267,7 @@ static void begin_right(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void back(ClickRecognizerRef recognizer, void *context) {
-  reset_game();
+  reset_gameVS();
   app_timer_cancel(timer);
   window_stack_pop(true);
 }
@@ -274,7 +277,7 @@ void pongVS_config_provider(Window *window) {
   window_raw_click_subscribe(BUTTON_ID_UP, begin_left, end_move, NULL);
   window_single_click_subscribe(BUTTON_ID_BACK, back);
   window_raw_click_subscribe(BUTTON_ID_DOWN, begin_right, end_move, NULL);
-  window_long_click_subscribe(BUTTON_ID_SELECT, 500, reset_game, NULL);
+  window_long_click_subscribe(BUTTON_ID_SELECT, 500, reset_gameVS, NULL);
 }
 
 static void pongVS_window_load(Window *window) {
