@@ -1,7 +1,12 @@
 {
-    "appKeys": {},
+    "appKeys": {
+        "KEY_OPPONENT_NUM": 2,
+        "KEY_OPP_POS": 0,
+        "KEY_PLAYER_NUM": 1,
+        "KEY_START": 0
+    },
     "capabilities": [
-        ""
+        "location"
     ],
     "companyName": "awilmot19@gmail.com",
     "longName": "Pong",

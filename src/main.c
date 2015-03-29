@@ -22,7 +22,9 @@
 #define LEFT_BORDER 5
 #define RIGHT_BORDER 115
 #define KEY_START 0
-#define KEY_OPP_POS 1
+#define KEY_OPP_POS 0
+#define KEY_PLAYER_NUM 1
+#define KEY_OPPONENT_NUM 2
   
 
 static short cpu_x_pos;
@@ -50,11 +52,6 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       if (((int)t->value->int32) == 1) {
         pongVS_init();
       }
-    break;
-    case KEY_OPP_POS:
-      APP_LOG(APP_LOG_LEVEL_ERROR, "%d", (int)t->value->int32);
-      cpu_x_pos = (int)t->value->int32;
-      APP_LOG(APP_LOG_LEVEL_ERROR, "KEY OPP POS");
     break;
     default:
     APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key);

@@ -321,10 +321,10 @@ void pongVS_init() {
 //  window_destroy(s_pong_window);
 //}
 
-void runPong() {
-  pongVS_init();
-  app_event_loop();
+//void runPong() {
+  //pongVS_init();
+  //app_event_loop();
   //pong_deinit();
-}
+//}
 
 
