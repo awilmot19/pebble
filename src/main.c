@@ -45,8 +45,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     switch(t->key) {
     case KEY_START:
       APP_LOG(APP_LOG_LEVEL_ERROR, "%d", (int)t->value->int32);
-      opponent = true;
       APP_LOG(APP_LOG_LEVEL_ERROR, "KEY START");
+      if (((int)t->value->int32) == 1) {
+        pongVS_init();
+      }
     break;
     case KEY_OPP_POS:
       APP_LOG(APP_LOG_LEVEL_ERROR, "%d", (int)t->value->int32);
