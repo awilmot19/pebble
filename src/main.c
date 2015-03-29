@@ -1,5 +1,3 @@
-//Main.c
-
 #include <pebble.h>
 #include "pong.h"
 #include "pongVS.h"
@@ -25,6 +23,7 @@
 //#define KEY_OPP_POS 0
 #define KEY_PLAYER_NUM 1
 #define KEY_OPPONENT_NUM 2
+#define KEY_CHECK_AGAIN 5
   
 
 static short cpu_x_pos;
@@ -65,6 +64,14 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         APP_LOG(APP_LOG_LEVEL_ERROR, "KEY START");
         if (((int)t->value->int32) == 1) {
           pongVS_init(playerNum,oppNum);
+        }
+        else{
+          APP_LOG(APP_LOG_LEVEL_ERROR, "Checking again");
+          static DictionaryIterator *iter;
+          static short test = 10;
+          app_message_outbox_begin(&iter);
+          dict_write_int(iter, KEY_CHECK_AGAIN, &test, sizeof(test), true);
+          app_message_outbox_send();
         }
       break;
     default:

@@ -7,6 +7,7 @@ var get_pos = '/get_pos';
 var baseUrl = 'http://whispering-hollows-6492.herokuapp.com:80/pong';
 var player_num;
 var opponent_num = -1;
+var savedPos;
 
 var xhrRequest = function (url, type, data, callback) {
   var xhr = new XMLHttpRequest();
@@ -33,6 +34,7 @@ var xhrRequestAsync = function (url, type, data, callback) {
 
 function locationSuccess(pos) {
   // Construct URL
+  savedPos = pos;
   var url = baseUrl + register;
   
   xhrRequest(url, 'POST', { "lat":pos.coords.latitude, "lng":pos.coords.longitude },
@@ -138,8 +140,35 @@ Pebble.addEventListener('appmessage',
     }
     else if(e.payload.KEY_CHECK_AGAIN){
       //find a new opponent
-      lookForMatch();
-    }
+      url = baseUrl + findOpponent;
+      xhrRequest(url, 'POST', { "lat":savedPos.coords.latitude, "lng":savedPos.coords.longitude, "player_id":player_num }, function(newResponseText){
+        console.log("checkAgain ResponseText:" + newResponseText);
+        var json = JSON.parse(newResponseText);
+        opponent_num = json.opponent_id;
+        console.log("Opponent num is " + opponent_num);
+      });
+      
+      var start = 1;
+    if(opponent_num == -1)
+      start = 0;
+      
+    // Assemble dictionary using our keys
+    var dictionary = {
+      'KEY_PLAYER_NUM': player_num,
+      'KEY_OPPONENT_NUM': opponent_num,
+      'KEY_START': start
+    };
+
+    // Send to Pebble
+    Pebble.sendAppMessage(dictionary,
+    function(e) {
+      console.log('reattempt data sent successfully!');
+    },
+    function(e) {
+      console.log('Error sending reattempt info to Pebble!');
+    });
+      
+  }
     else if(e.payload.KEY_LEAVING){
       //unregister
       url = baseUrl + unregister;
