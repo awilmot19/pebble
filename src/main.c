@@ -2,6 +2,7 @@
 
 #include <pebble.h>
 #include "pong.h"
+#include "pongVS.h"
 
 #define WIDTH 115
 #define HEIGHT 120
