@@ -108,18 +108,20 @@ static void move() {
   ball_y_pos += ball_y_vel;
   
   // Record potential scores
-  if (ball_y_pos>USER_GOAL) {
+  if (ball_y_pos>USER_GOAL+5) {
     ball_x_vel = rand() % MAX_HORIZ_VEL;
     ball_y_vel = -VERT_VEL;
     ball_x_pos = (RIGHT_BORDER-LEFT_BORDER)/2;
     ball_y_pos = (USER_GOAL-CPU_GOAL)/2;
     cpu_score += 1;
-  } else if (ball_y_pos<CPU_GOAL) {
+    psleep(500);
+  } else if (ball_y_pos<CPU_GOAL-5) {
     ball_x_vel = rand() % MAX_HORIZ_VEL;
     ball_y_vel = VERT_VEL;
     ball_x_pos = (RIGHT_BORDER-LEFT_BORDER)/2;
     ball_y_pos = (USER_GOAL-CPU_GOAL)/2;
     person_score += 1;
+    psleep(500);
   } 
   
   // Keep ball in boundaries
@@ -235,12 +237,13 @@ static void pong_window_load(Window *window) {
   
   window_set_click_config_provider(window, (ClickConfigProvider) pong_config_provider);
   
-  ball_y_vel = rand() % VERT_VEL;
+  ball_x_vel = 1;
   timer = app_timer_register(WAIT, move_with_timer, NULL);
 }
 
 static void pong_window_unload(Window *window) {
   layer_destroy(s_pong_layer);
+  window_destroy(s_pong_window);
 }
 
 void pong_init() {  
@@ -259,14 +262,14 @@ void pong_init() {
   window_stack_push(s_pong_window, true);
 }
 
-static void pong_deinit() {
+//static void pong_deinit() {
   // Destroy window
-  window_destroy(s_pong_window);
-}
+//  window_destroy(s_pong_window);
+//}
 
-int main() {
+/*void runPong() {
   pong_init();
   app_event_loop();
-  pong_deinit();
-}
+  //pong_deinit();
+}*/
 
