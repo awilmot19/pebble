@@ -26,12 +26,12 @@
 
 static short cpu_x_pos;
   
-static Window *s_pong_window;
-static Layer *s_pong_layer;
+//static Window *s_pong_window;
+//static Layer *s_pong_layer;
 static Layer *s_start_layer;
 static Window *s_start_window;
 
-static AppTimer *timer;
+//static AppTimer *timer;
 
 static bool opponent = false;
 

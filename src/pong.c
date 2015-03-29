@@ -3,7 +3,7 @@
 
 #define WIDTH 115
 #define HEIGHT 120
-#define MAX_HORIZ_VEL 5
+#define HORIZ_VEL 5
 #define PADDLE_WIDTH 20
 #define PADDLE_HEIGHT 20
 #define PADDLE_DISTANCE 10
@@ -35,6 +35,7 @@ static short cpu_x_pos = WIDTH/2-PADDLE_WIDTH/2;
 static short paused = 0;
 static short win = 0;
 static short lose = 0;
+static bool gameOn = true;
 
 static short person_score = 0;
 static short cpu_score = 0;
@@ -58,7 +59,8 @@ static void draw_pong(Layer *layer, GContext *ctx) {
   graphics_draw_line(ctx, GPoint(RIGHT_BORDER,TOP_BORDER), GPoint(RIGHT_BORDER, HEIGHT+TOP_BORDER));
   
   // ball
-  graphics_fill_circle(ctx, GPoint(ball_x_pos, ball_y_pos), BALL_RADIUS);
+  if (gameOn == true)
+    graphics_fill_circle(ctx, GPoint(ball_x_pos, ball_y_pos), BALL_RADIUS);
   
   // paddles
   graphics_draw_line(ctx, GPoint(person_x_pos, USER_GOAL), GPoint(person_x_pos + PADDLE_WIDTH, USER_GOAL));
@@ -106,17 +108,16 @@ static void move() {
   cpu_x_pos += cpu_vel;
   ball_x_pos += ball_x_vel;
   ball_y_pos += ball_y_vel;
-  
   // Record potential scores
   if (ball_y_pos>USER_GOAL+5) {
-    ball_x_vel = rand() % MAX_HORIZ_VEL;
+    ball_x_vel = 2;
     ball_y_vel = -VERT_VEL;
     ball_x_pos = (RIGHT_BORDER-LEFT_BORDER)/2;
     ball_y_pos = (USER_GOAL-CPU_GOAL)/2;
     cpu_score += 1;
     psleep(500);
   } else if (ball_y_pos<CPU_GOAL-5) {
-    ball_x_vel = rand() % MAX_HORIZ_VEL;
+    ball_x_vel = 2;
     ball_y_vel = VERT_VEL;
     ball_x_pos = (RIGHT_BORDER-LEFT_BORDER)/2;
     ball_y_pos = (USER_GOAL-CPU_GOAL)/2;
@@ -125,34 +126,28 @@ static void move() {
   } 
   
   // Keep ball in boundaries
-  if (ball_x_pos<=LEFT_BORDER || ball_x_pos>=RIGHT_BORDER) {
-    ball_x_vel = -ball_x_vel;
-  }
+  if (ball_x_pos<LEFT_BORDER-ball_x_vel || ball_x_pos>RIGHT_BORDER-ball_x_vel) {
+      ball_x_vel = -ball_x_vel;
+  }  
   
   // Bounce ball off paddles
-  if (ball_y_pos<=CPU_GOAL+BALL_RADIUS && ball_y_pos>CPU_GOAL) {
+  if (ball_y_pos<=CPU_GOAL+BALL_RADIUS && ball_y_pos>CPU_GOAL+1) {
     if (ball_x_pos>=cpu_x_pos && ball_x_pos<=cpu_x_pos+PADDLE_WIDTH) {
       if (ball_y_vel < 0) {
-        ball_x_vel = (ball_x_pos - cpu_x_pos - PADDLE_WIDTH/2)*MAX_HORIZ_VEL*2;
+        ball_x_vel = (ball_x_pos - cpu_x_pos - PADDLE_WIDTH/2)*HORIZ_VEL*2;
         ball_y_vel = -ball_y_vel;
         ball_x_vel = ball_x_vel/PADDLE_WIDTH;
       }
     }
   }
-  if (ball_y_pos>=USER_GOAL-BALL_RADIUS && ball_y_pos<USER_GOAL) {
+  if (ball_y_pos>=USER_GOAL-BALL_RADIUS && ball_y_pos<USER_GOAL-1) {
     if (ball_x_pos>=person_x_pos-2 && ball_x_pos<=person_x_pos+PADDLE_WIDTH+2) {
       if (ball_y_vel > 0) {
-        ball_x_vel = (ball_x_pos - person_x_pos - PADDLE_WIDTH/2)*MAX_HORIZ_VEL*2;
+        ball_x_vel = (ball_x_pos - person_x_pos - PADDLE_WIDTH/2)*HORIZ_VEL*2;
         ball_y_vel = -ball_y_vel;
         ball_x_vel = ball_x_vel/PADDLE_WIDTH;
       }
     }
-  }
-  
-  // Fix ball if in glitchy corner
-  if (ball_y_pos > USER_GOAL-2 && ball_x_pos > RIGHT_BORDER - 2) {
-    ball_x_vel = -ball_x_vel;
-    ball_y_vel = -ball_y_vel;
   }
 }
 
@@ -161,10 +156,12 @@ static void move_with_timer() {
   timer = app_timer_register(WAIT, move_with_timer, NULL);
   if (person_score == WINNING_SCORE) {
     win = 1;
+    gameOn = false;
     stop();
   }
   if (cpu_score == WINNING_SCORE) {
     lose = 1;
+    gameOn = false;
     stop();
   }
   layer_mark_dirty(s_pong_layer);
@@ -185,6 +182,8 @@ void reset_game() {
   lose = 0;
   person_score = 0;
   cpu_score = 0;
+  gameOn = true;
+
   timer = app_timer_register(WAIT, move_with_timer, NULL);
 }
 
