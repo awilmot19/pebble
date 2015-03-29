@@ -22,7 +22,7 @@
 #define LEFT_BORDER 5
 #define RIGHT_BORDER 115
 #define KEY_START 0
-#define KEY_OPP_POS 0
+//#define KEY_OPP_POS 0
 #define KEY_PLAYER_NUM 1
 #define KEY_OPPONENT_NUM 2
   
@@ -33,30 +33,44 @@ static short cpu_x_pos;
 //static Layer *s_pong_layer;
 static Layer *s_start_layer;
 static Window *s_start_window;
+static int i = 0;
 
 //static AppTimer *timer;
 
 static bool opponent = false;
+static short playerNum;
+static short oppNum;
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) { 
   // Read first item
   Tuple *t = dict_read_first(iterator);
-
+  APP_LOG(APP_LOG_LEVEL_INFO, "%d", i);
+  i++;
   // For all items
   while(t != NULL) {
     // Which key was received?
     switch(t->key) {
-    case KEY_START:
-      APP_LOG(APP_LOG_LEVEL_ERROR, "%d", (int)t->value->int32);
-      APP_LOG(APP_LOG_LEVEL_ERROR, "KEY START");
-      if (((int)t->value->int32) == 1) {
-        pongVS_init();
-      }
-    break;
+      case KEY_PLAYER_NUM:
+        APP_LOG(APP_LOG_LEVEL_ERROR, "%d", (int)t->value->int32);
+        APP_LOG(APP_LOG_LEVEL_ERROR, "KEY PLAYER NUM");
+          playerNum = (int)t->value->int32;
+      break;
+      case KEY_OPPONENT_NUM:
+        APP_LOG(APP_LOG_LEVEL_ERROR, "%d", (int)t->value->int32);
+        APP_LOG(APP_LOG_LEVEL_ERROR, "KEY OPPONENT NUM");
+          oppNum = (int)t->value->int32;
+      break;
+      case KEY_START:
+        APP_LOG(APP_LOG_LEVEL_ERROR, "%d", (int)t->value->int32);
+        APP_LOG(APP_LOG_LEVEL_ERROR, "KEY START");
+        if (((int)t->value->int32) == 1) {
+          pongVS_init(playerNum,oppNum);
+        }
+      break;
     default:
     APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key);
     break;
-  }
+    }
 
     // Look for next item
     t = dict_read_next(iterator);

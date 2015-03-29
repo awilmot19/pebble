@@ -105,7 +105,7 @@ Pebble.addEventListener('appmessage',
     if(e.payload.KEY_PLAY_POS){
       //send position
       url = baseUrl + give_pos;
-      xhrRequestAsync(url, 'POST', { "x_pos" : e.payload.KEYPLAY_POS }, function(responseText){
+      xhrRequest(url, 'POST', { "x_pos" : e.payload.KEY_PLAY_POS, "player_id" : player_num }, function(responseText){
         console.log("give_pos response text: " + responseText);
         
         url = baseUrl + get_pos;
@@ -115,6 +115,8 @@ Pebble.addEventListener('appmessage',
           var json = JSON.parse(newResponseText);
           var opp_pos = json.x_pos;
           
+          console.log("sending something...");
+          
           var dictionary = {
             'KEY_OPP_POS': opp_pos
           };
@@ -122,10 +124,14 @@ Pebble.addEventListener('appmessage',
           // Send to Pebble
           Pebble.sendAppMessage(dictionary,
           function(e) {
-            console.log('initial data sent successfully!');
+            console.log('move data sent successfully!');
           },
           function(e) {
-            console.log('Error sending initial info to Pebble!');
+            console.log(opp_pos);
+            console.log(e);
+            //console.log(JSON.parse(e));
+            console.log(JSON.stringify(e));
+            console.log('Error sending move info to Pebble!');
           }); 
         });
       });

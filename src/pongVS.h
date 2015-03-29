@@ -1,3 +1,3 @@
 #pragma once
 
-void pongVS_init();
+void pongVS_init(short, short);

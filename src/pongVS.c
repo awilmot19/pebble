@@ -1,8 +1,8 @@
 #include <pebble.h>
 #include "pongVS.h"
   
-#define KEY_OPP_POS 0
-#define KEY_PLAY_POS 0
+#define KEY_OPP_POS 3
+#define KEY_PLAY_POS 4
 
 #define WIDTH 115
 #define HEIGHT 120
@@ -28,6 +28,9 @@ static short opp_x_pos;
 //static Layer *s_pong_layer;
 static Layer *s_start_layer;
 static Window *s_start_window;
+static short pNum;
+static short oNum;
+static bool gameStart = true;
 
 //static AppTimer *timer;
 
@@ -51,9 +54,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key);
     break;
     }
-  }
+    
     // Look for next item
     t = dict_read_next(iterator);
+  }
+    
 }
 
 
@@ -66,7 +71,7 @@ static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResul
 }
 
 static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
-  // Read first item
+  /*// Read first item
   Tuple *t = dict_read_first(iterator);
 
   // For all items
@@ -85,8 +90,8 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
   }
 
   // Look for next item
-  t = dict_read_next(iterator);
-  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+  t = dict_read_next(iterator);*/
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send success!");
 }
   
 static Window *s_pongVS_window;
@@ -106,6 +111,7 @@ static short paused = 0;
 static short win = 0;
 static short lose = 0;
 static bool gameOn = true;
+static double numTimes = 0;
 
 static short person_score = 0;
 static short opp_score = 0;
@@ -124,10 +130,13 @@ static void draw_pongVS(Layer *layer, GContext *ctx) {
   //curr_opp_pos = inbox_received_callback(DictionaryIterator *iterator, void *context);
   // Send players current paddle position
   //dict_write_begin(iter, buffer, sizeof(buffer));
-  app_message_outbox_begin(&iter);
-  dict_write_int(iter, KEY_PLAY_POS, &person_x_pos, sizeof(person_x_pos), true);
-  //outbox_sent_callback(&iter, void *context);
-  app_message_outbox_send();
+  //if (((int)numTimes % 5000) == 0) {
+    app_message_outbox_begin(&iter);
+    dict_write_int(iter, KEY_PLAY_POS, &person_x_pos, sizeof(person_x_pos), true);
+    //outbox_sent_callback(&iter, void *context);
+    app_message_outbox_send();
+  //}
+  //numTimes++;
   
   // scores
   char person_score_char[2] = " ";
@@ -164,6 +173,17 @@ static void stop() {
 }
 
 static void move() {
+  if (gameStart) {
+    if (oNum > pNum) {
+      ball_y_vel = VERT_VEL;
+      ball_x_vel = HORIZ_VEL;
+    }
+    else {
+      ball_y_vel = -VERT_VEL;
+      ball_x_vel = -HORIZ_VEL;
+    }
+    gameStart = false;
+  }
   // Keep player's paddle in boundaries
   if (person_x_pos<LEFT_BORDER+PERSON_VEL && person_vel<0) {
     person_vel = 0;
@@ -250,6 +270,7 @@ void reset_gameVS() {
   person_score = 0;
   opp_score = 0;
   gameOn = true;
+  gameStart = true;
 
   timer = app_timer_register(WAIT, move_with_timer, NULL);
 }
@@ -297,8 +318,10 @@ static void pongVS_window_unload(Window *window) {
   window_destroy(s_pongVS_window);
 }
 
-void pongVS_init() {  
+void pongVS_init(short playerNum, short oppNum) {  
   // Create main Window element and assign to pointer
+  pNum = playerNum;
+  oNum = oppNum;
   s_pongVS_window = window_create();
   
   window_set_background_color(s_pongVS_window, GColorBlack);
@@ -311,6 +334,8 @@ void pongVS_init() {
   
   app_message_register_inbox_received(inbox_received_callback);
   app_message_register_outbox_sent(outbox_sent_callback);
+  
+  //app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   
   // Show the Window on the watch, with animated=true
   window_stack_push(s_pongVS_window, true);
